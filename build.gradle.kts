@@ -1,7 +1,7 @@
 plugins {
-    id("java")
-    id("io.freefair.lombok") version "8.13.1"
-    id("com.gradleup.shadow") version "9.0.0-beta15"
+    alias(libs.plugins.java)
+    alias(libs.plugins.lombok)
+    alias(libs.plugins.shadow)
 }
 
 group = "com.bruhdows"
@@ -12,5 +12,5 @@ repositories {
 }
 
 dependencies {
-    implementation("net.kyori:adventure-text-serializer-legacy:4.21.0")
+    implementation(libs.adventure.text.serializer.legacy)
 }

@@ -1,0 +1,12 @@
+[versions]
+lombok = "8.13.1"
+shadow = "9.0.0-beta15"
+adventure-text-serializer-legacy = "4.21.0"
+
+[libraries]
+adventure-text-serializer-legacy = { module = "net.kyori:adventure-text-serializer-legacy", version.ref = "adventure-text-serializer-legacy" }
+
+[plugins]
+java = { id = "java" }
+lombok = { id = "io.freefair.lombok", version.ref = "lombok" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
