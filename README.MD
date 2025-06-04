@@ -38,7 +38,7 @@ Replace **VERSION** with the latest version from Releases.
 
 ## Usage
 ```java
-import com.example.minitext.MiniText;
+import com.bruhdows.minitext.MiniText;
 
 // Basic usage
 MiniText miniText = MiniText.miniText();
