@@ -77,8 +77,22 @@ public class ColorHelper {
                 } catch (IllegalArgumentException ignored) {}
             }
         }
+
+        if (tag.matches("[0-9a-fA-F]{6}")) {
+            try {
+                return TextColor.fromHexString("#" + tag);
+            } catch (IllegalArgumentException ignored) {}
+        }
+
+        if (tag.matches("[0-9a-fA-F]{3}")) {
+            try {
+                return TextColor.fromHexString("#" + expandShortHex(tag));
+            } catch (IllegalArgumentException ignored) {}
+        }
+
         return null;
     }
+
 
     public List<TextColor> parseGradientColors(String[] colors) {
         List<TextColor> gradientColors = new ArrayList<>();

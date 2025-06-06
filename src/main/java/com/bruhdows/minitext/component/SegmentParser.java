@@ -7,6 +7,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 
 import java.util.ArrayList;
@@ -177,6 +178,15 @@ public class SegmentParser {
             NamedTextColor namedColor = colorHelper.getNamedColor(tagType);
             if (namedColor != null) {
                 currentSegment.color = namedColor;
+                currentSegment.clearDecorations();
+                return currentSegment;
+            }
+        }
+
+        if (miniText.getEnabledFormatters().contains(FormatterType.HEX)) {
+            TextColor hexColor = colorHelper.parseHexFromTag(tagType);
+            if (hexColor != null) {
+                currentSegment.color = hexColor;
                 currentSegment.clearDecorations();
                 return currentSegment;
             }
