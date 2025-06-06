@@ -186,7 +186,6 @@ public class SegmentParser {
             TextDecoration decoration = colorHelper.getDecoration(tagType);
             if (decoration != null) {
                 currentSegment.decorations.put(decoration, true);
-                currentSegment.clearNonDecorations();
                 return currentSegment;
             }
         }

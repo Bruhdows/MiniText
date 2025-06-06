@@ -115,7 +115,7 @@ public class SerializationHelper {
         if (hoverEvent.action() == HoverEvent.Action.SHOW_TEXT) {
             Object value = hoverEvent.value();
             if (value instanceof Component) {
-                String text = value.toString().replaceAll("'", "\\'");
+                String text = value.toString().replaceAll("'", "'");
                 return "[hover:show_text:'" + text + "']";
             }
         }
@@ -126,7 +126,7 @@ public class SerializationHelper {
     public String serializeClickEvent(ClickEvent clickEvent) {
         if (clickEvent == null) return "";
 
-        String action = "";
+        String action;
         switch (clickEvent.action()) {
             case OPEN_URL:
                 action = "open_url";
@@ -144,7 +144,7 @@ public class SerializationHelper {
                 return "";
         }
 
-        String value = clickEvent.value().replaceAll("'", "\\'");
+        String value = clickEvent.value().replaceAll("'", "'");
         return "[click:" + action + ":'" + value + "']";
     }
 }
