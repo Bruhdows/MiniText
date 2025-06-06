@@ -4,65 +4,90 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ColorHelper {
-    private static final Map<String, NamedTextColor> NAMED_COLORS = new HashMap<>();
-    private static final Map<String, TextDecoration> NAMED_DECORATIONS = new HashMap<>();
+    private static volatile Map<String, NamedTextColor> NAMED_COLORS;
+    private static volatile Map<String, TextDecoration> NAMED_DECORATIONS;
 
-    static {
-        initializeNamedColors();
-        initializeDecorations();
+    private final Map<String, TextColor> colorCache = new ConcurrentHashMap<>(64);
+
+    private static Map<String, NamedTextColor> getNamedColors() {
+        if (NAMED_COLORS == null) {
+            synchronized (ColorHelper.class) {
+                if (NAMED_COLORS == null) {
+                    NAMED_COLORS = Collections.unmodifiableMap(initializeNamedColors());
+                }
+            }
+        }
+        return NAMED_COLORS;
     }
 
-    private static void initializeNamedColors() {
-        NAMED_COLORS.put("red", NamedTextColor.RED);
-        NAMED_COLORS.put("blue", NamedTextColor.BLUE);
-        NAMED_COLORS.put("aqua", NamedTextColor.AQUA);
-        NAMED_COLORS.put("yellow", NamedTextColor.YELLOW);
-        NAMED_COLORS.put("green", NamedTextColor.GREEN);
-        NAMED_COLORS.put("purple", NamedTextColor.LIGHT_PURPLE);
-        NAMED_COLORS.put("gray", NamedTextColor.GRAY);
-        NAMED_COLORS.put("grey", NamedTextColor.GRAY);
-        NAMED_COLORS.put("white", NamedTextColor.WHITE);
-        NAMED_COLORS.put("black", NamedTextColor.BLACK);
-        NAMED_COLORS.put("dark_red", NamedTextColor.DARK_RED);
-        NAMED_COLORS.put("dark_blue", NamedTextColor.DARK_BLUE);
-        NAMED_COLORS.put("dark_aqua", NamedTextColor.DARK_AQUA);
-        NAMED_COLORS.put("dark_yellow", NamedTextColor.YELLOW);
-        NAMED_COLORS.put("dark_green", NamedTextColor.DARK_GREEN);
-        NAMED_COLORS.put("dark_purple", NamedTextColor.DARK_PURPLE);
-        NAMED_COLORS.put("dark_gray", NamedTextColor.DARK_GRAY);
-        NAMED_COLORS.put("dark_grey", NamedTextColor.DARK_GRAY);
-        NAMED_COLORS.put("light_purple", NamedTextColor.LIGHT_PURPLE);
-        NAMED_COLORS.put("gold", NamedTextColor.GOLD);
+    private static Map<String, TextDecoration> getNamedDecorations() {
+        if (NAMED_DECORATIONS == null) {
+            synchronized (ColorHelper.class) {
+                if (NAMED_DECORATIONS == null) {
+                    NAMED_DECORATIONS = Collections.unmodifiableMap(initializeDecorations());
+                }
+            }
+        }
+        return NAMED_DECORATIONS;
     }
 
-    private static void initializeDecorations() {
-        NAMED_DECORATIONS.put("bold", TextDecoration.BOLD);
-        NAMED_DECORATIONS.put("b", TextDecoration.BOLD);
-        NAMED_DECORATIONS.put("italic", TextDecoration.ITALIC);
-        NAMED_DECORATIONS.put("i", TextDecoration.ITALIC);
-        NAMED_DECORATIONS.put("underlined", TextDecoration.UNDERLINED);
-        NAMED_DECORATIONS.put("u", TextDecoration.UNDERLINED);
-        NAMED_DECORATIONS.put("strikethrough", TextDecoration.STRIKETHROUGH);
-        NAMED_DECORATIONS.put("st", TextDecoration.STRIKETHROUGH);
-        NAMED_DECORATIONS.put("obfuscated", TextDecoration.OBFUSCATED);
-        NAMED_DECORATIONS.put("o", TextDecoration.OBFUSCATED);
+    private static Map<String, NamedTextColor> initializeNamedColors() {
+        Map<String, NamedTextColor> colors = new HashMap<>();
+        colors.put("red", NamedTextColor.RED);
+        colors.put("blue", NamedTextColor.BLUE);
+        colors.put("aqua", NamedTextColor.AQUA);
+        colors.put("yellow", NamedTextColor.YELLOW);
+        colors.put("green", NamedTextColor.GREEN);
+        colors.put("purple", NamedTextColor.LIGHT_PURPLE);
+        colors.put("gray", NamedTextColor.GRAY);
+        colors.put("grey", NamedTextColor.GRAY);
+        colors.put("white", NamedTextColor.WHITE);
+        colors.put("black", NamedTextColor.BLACK);
+        colors.put("dark_red", NamedTextColor.DARK_RED);
+        colors.put("dark_blue", NamedTextColor.DARK_BLUE);
+        colors.put("dark_aqua", NamedTextColor.DARK_AQUA);
+        colors.put("dark_yellow", NamedTextColor.YELLOW);
+        colors.put("dark_green", NamedTextColor.DARK_GREEN);
+        colors.put("dark_purple", NamedTextColor.DARK_PURPLE);
+        colors.put("dark_gray", NamedTextColor.DARK_GRAY);
+        colors.put("dark_grey", NamedTextColor.DARK_GRAY);
+        colors.put("light_purple", NamedTextColor.LIGHT_PURPLE);
+        colors.put("gold", NamedTextColor.GOLD);
+        return colors;
+    }
+
+    private static Map<String, TextDecoration> initializeDecorations() {
+        Map<String, TextDecoration> decorations = new HashMap<>();
+        decorations.put("bold", TextDecoration.BOLD);
+        decorations.put("b", TextDecoration.BOLD);
+        decorations.put("italic", TextDecoration.ITALIC);
+        decorations.put("i", TextDecoration.ITALIC);
+        decorations.put("underlined", TextDecoration.UNDERLINED);
+        decorations.put("u", TextDecoration.UNDERLINED);
+        decorations.put("strikethrough", TextDecoration.STRIKETHROUGH);
+        decorations.put("st", TextDecoration.STRIKETHROUGH);
+        decorations.put("obfuscated", TextDecoration.OBFUSCATED);
+        decorations.put("o", TextDecoration.OBFUSCATED);
+        return decorations;
     }
 
     public NamedTextColor getNamedColor(String name) {
-        return NAMED_COLORS.get(name.toLowerCase());
+        return getNamedColors().get(name.toLowerCase());
     }
 
     public TextDecoration getDecoration(String name) {
-        return NAMED_DECORATIONS.get(name.toLowerCase());
+        return getNamedDecorations().get(name.toLowerCase());
     }
 
     public TextColor parseHexFromTag(String tag) {
+        return colorCache.computeIfAbsent(tag, this::parseHexFromTagUncached);
+    }
+
+    private TextColor parseHexFromTagUncached(String tag) {
         if (tag.startsWith("#")) {
             if (tag.length() == 7) {
                 try {
@@ -93,10 +118,10 @@ public class ColorHelper {
         return null;
     }
 
-
     public List<TextColor> parseGradientColors(String[] colors) {
-        List<TextColor> gradientColors = new ArrayList<>();
+        List<TextColor> gradientColors = new ArrayList<>(colors.length);
         for (String color : colors) {
+            color = color.trim();
             TextColor textColor = parseColor(color);
             if (textColor != null) {
                 gradientColors.add(textColor);
@@ -106,20 +131,32 @@ public class ColorHelper {
     }
 
     public TextColor parseColor(String color) {
-        NamedTextColor namedColor = NAMED_COLORS.get(color.toLowerCase());
+        return colorCache.computeIfAbsent(color, this::parseColorUncached);
+    }
+
+    private TextColor parseColorUncached(String color) {
+        NamedTextColor namedColor = getNamedColors().get(color.toLowerCase());
         if (namedColor != null) {
             return namedColor;
         }
 
         if (color.startsWith("#")) {
             try {
-                return TextColor.fromHexString(color);
+                if (color.length() == 7) {
+                    return TextColor.fromHexString(color);
+                } else if (color.length() == 4) {
+                    return TextColor.fromHexString("#" + expandShortHex(color.substring(1)));
+                }
             } catch (IllegalArgumentException ignored) {}
-        } else if (color.matches("[0-9a-fA-F]{6}")) {
+        }
+
+        if (color.matches("[0-9a-fA-F]{6}")) {
             try {
                 return TextColor.fromHexString("#" + color);
             } catch (IllegalArgumentException ignored) {}
-        } else if (color.matches("[0-9a-fA-F]{3}")) {
+        }
+
+        if (color.matches("[0-9a-fA-F]{3}")) {
             try {
                 return TextColor.fromHexString("#" + expandShortHex(color));
             } catch (IllegalArgumentException ignored) {}
@@ -129,7 +166,7 @@ public class ColorHelper {
     }
 
     private String expandShortHex(String shortHex) {
-        StringBuilder expanded = new StringBuilder();
+        StringBuilder expanded = new StringBuilder(6);
         for (char c : shortHex.toCharArray()) {
             expanded.append(c).append(c);
         }

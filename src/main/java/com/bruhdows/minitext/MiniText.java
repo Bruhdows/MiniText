@@ -7,7 +7,6 @@ import com.bruhdows.minitext.formatter.LegacyFormatter;
 import com.bruhdows.minitext.processor.ComponentProcessor;
 import com.bruhdows.minitext.serialization.DefaultMiniTextSerializer;
 import com.bruhdows.minitext.serialization.MiniTextSerializer;
-import lombok.CustomLog;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 
@@ -18,7 +17,7 @@ public class MiniText {
 
     private static final MiniText DEFAULT_INSTANCE = new Builder().build();
 
-    private final Set<FormatterType> enabledFormatters;
+    private final EnumSet<FormatterType> enabledFormatters;
     private final LegacyFormatter legacyFormatter;
     private final HexFormatter hexFormatter;
     private final BracketFormatter bracketFormatter;
@@ -52,15 +51,23 @@ public class MiniText {
     }
 
     public FormattedText deserialize(String input) {
+        Objects.requireNonNull(input, "Input cannot be null");
+        if (input.isEmpty()) {
+            return new FormattedText("", this);
+        }
         return new FormattedText(input, this);
     }
 
     public FormattedText deserialize(String input, Object context) {
+        Objects.requireNonNull(input, "Input cannot be null");
+        if (input.isEmpty()) {
+            return new FormattedText("", this, context);
+        }
         return new FormattedText(input, this, context);
     }
 
     public static class Builder {
-        private final Set<FormatterType> enabledFormatters = EnumSet.allOf(FormatterType.class);
+        private final EnumSet<FormatterType> enabledFormatters = EnumSet.allOf(FormatterType.class);
         private final Map<String, ComponentProcessor> customProcessors = new HashMap<>();
 
         public Builder enableFormatter(FormatterType... types) {

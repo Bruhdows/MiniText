@@ -17,98 +17,90 @@ import java.util.regex.Pattern;
 
 public class SegmentParser {
     private static final Pattern BRACKET_PATTERN = Pattern.compile("\\[([^]]+)]");
+
     private final MiniText miniText;
     private final ColorHelper colorHelper;
-    
+    private final ThreadLocal<Matcher> matcher = ThreadLocal.withInitial(() -> BRACKET_PATTERN.matcher(""));
+
     public SegmentParser(MiniText miniText) {
         this.miniText = miniText;
         this.colorHelper = new ColorHelper();
     }
-    
+
     public List<TextSegment> parseSegments(String input) {
         List<TextSegment> segments = new ArrayList<>();
-        TextSegment currentSegment = new TextSegment();
-        
-        Matcher matcher = BRACKET_PATTERN.matcher(input);
+        TextSegment currentSegment = SegmentPool.acquire();
+
+        Matcher m = matcher.get();
+        m.reset(input);
         int lastEnd = 0;
-        
-        while (matcher.find()) {
-            String beforeTag = input.substring(lastEnd, matcher.start());
-            if (!beforeTag.isEmpty()) {
-                currentSegment.text = beforeTag;
+
+        try {
+            while (m.find()) {
+                String beforeTag = input.substring(lastEnd, m.start());
+                if (!beforeTag.isEmpty()) {
+                    currentSegment.text = beforeTag;
+                    segments.add(currentSegment);
+                    currentSegment = SegmentPool.acquire().copyFrom(currentSegment);
+                }
+
+                String tag = m.group(1);
+                TextSegment result = processTag(tag, currentSegment);
+
+                if (isNewlineTag(tag)) {
+                    TextSegment newlineSegment = SegmentPool.acquire().copyFrom(currentSegment);
+                    newlineSegment.text = "\n";
+                    segments.add(newlineSegment);
+                } else {
+                    currentSegment = result;
+                }
+
+                lastEnd = m.end();
+            }
+
+            String remainingText = input.substring(lastEnd);
+            if (!remainingText.isEmpty()) {
+                currentSegment.text = remainingText;
                 segments.add(currentSegment);
-                currentSegment = new TextSegment(currentSegment);
-            }
-            
-            String tag = matcher.group(1);
-            TextSegment result = processTag(tag, currentSegment);
-            
-            if (isNewlineTag(tag)) {
-                TextSegment newlineSegment = new TextSegment(currentSegment);
-                newlineSegment.text = "\n";
-                segments.add(newlineSegment);
             } else {
-                currentSegment = result;
+                SegmentPool.release(currentSegment);
             }
-            
-            lastEnd = matcher.end();
+        } catch (Exception e) {
+            SegmentPool.release(currentSegment);
+            throw e;
         }
-        
-        String remainingText = input.substring(lastEnd);
-        if (!remainingText.isEmpty()) {
-            currentSegment.text = remainingText;
-            segments.add(currentSegment);
-        }
-        
+
         return segments;
     }
-    
+
     private boolean isNewlineTag(String tag) {
         return miniText.getEnabledFormatters().contains(FormatterType.NEW_LINES) &&
-               (tag.equals("n") || tag.equals("nl") || tag.equals("br"));
+                (tag.equals("n") || tag.equals("nl") || tag.equals("br"));
     }
-    
+
     private TextSegment processTag(String tag, TextSegment currentSegment) {
         if (isNewlineTag(tag)) {
             return currentSegment;
         }
-        
+
         String[] parts = tag.split(":", 2);
         String tagType = parts[0].toLowerCase();
-        
-        switch (tagType) {
-            case "reset":
-                if (miniText.getEnabledFormatters().contains(FormatterType.RESET)) {
-                    return new TextSegment();
-                }
-                break;
-            case "rainbow":
-                if (miniText.getEnabledFormatters().contains(FormatterType.RAINBOW)) {
-                    return processRainbow(parts, currentSegment);
-                }
-                break;
-            case "gradient":
-                if (miniText.getEnabledFormatters().contains(FormatterType.GRADIENTS)) {
-                    return processGradient(parts, currentSegment);
-                }
-                break;
-            case "hover":
-                if (miniText.getEnabledFormatters().contains(FormatterType.HOVER_EVENTS)) {
-                    return processHover(parts, currentSegment);
-                }
-                break;
-            case "click":
-                if (miniText.getEnabledFormatters().contains(FormatterType.CLICK_EVENTS)) {
-                    return processClick(parts, currentSegment);
-                }
-                break;
-            default:
-                return processSimpleTag(tagType, currentSegment);
-        }
-        
-        return currentSegment;
+
+        return switch (tagType) {
+            case "reset" -> miniText.getEnabledFormatters().contains(FormatterType.RESET)
+                    ? SegmentPool.acquire() : currentSegment;
+            case "rainbow" -> miniText.getEnabledFormatters().contains(FormatterType.RAINBOW)
+                    ? processRainbow(parts, currentSegment) : currentSegment;
+            case "gradient" -> miniText.getEnabledFormatters().contains(FormatterType.GRADIENTS)
+                    ? processGradient(parts, currentSegment) : currentSegment;
+            case "hover" -> miniText.getEnabledFormatters().contains(FormatterType.HOVER_EVENTS)
+                    ? processHover(parts, currentSegment) : currentSegment;
+            case "click" -> miniText.getEnabledFormatters().contains(FormatterType.CLICK_EVENTS)
+                    ? processClick(parts, currentSegment) : currentSegment;
+            default -> processSimpleTag(tagType, currentSegment);
+        };
     }
-    
+
     private TextSegment processRainbow(String[] parts, TextSegment currentSegment) {
         int phase = 0;
         if (parts.length > 1) {
@@ -118,27 +110,35 @@ public class SegmentParser {
         }
         currentSegment.rainbow = true;
         currentSegment.rainbowPhase = phase;
+        currentSegment.gradient = false;
+        currentSegment.gradientColors = null;
+        currentSegment.color = null;
         return currentSegment;
     }
-    
+
     private TextSegment processGradient(String[] parts, TextSegment currentSegment) {
         if (parts.length > 1) {
             String[] colors = parts[1].split(":");
             if (colors.length >= 2) {
-                currentSegment.gradient = true;
-                currentSegment.gradientColors = colorHelper.parseGradientColors(colors);
+                List<TextColor> gradientColors = colorHelper.parseGradientColors(colors);
+                if (gradientColors.size() >= 2) {
+                    currentSegment.gradient = true;
+                    currentSegment.gradientColors = gradientColors;
+                    currentSegment.rainbow = false;
+                    currentSegment.color = null;
+                }
             }
         }
         return currentSegment;
     }
-    
+
     private TextSegment processHover(String[] parts, TextSegment currentSegment) {
         if (parts.length > 1) {
             String[] hoverParts = parts[1].split(":", 2);
             if (hoverParts.length == 2) {
                 String hoverType = hoverParts[0];
                 String hoverValue = hoverParts[1].replaceAll("^'|'$", "");
-                
+
                 if ("show_text".equals(hoverType)) {
                     currentSegment.hoverEvent = HoverEvent.showText(Component.text(hoverValue));
                 }
@@ -146,33 +146,26 @@ public class SegmentParser {
         }
         return currentSegment;
     }
-    
+
     private TextSegment processClick(String[] parts, TextSegment currentSegment) {
         if (parts.length > 1) {
             String[] clickParts = parts[1].split(":", 2);
             if (clickParts.length == 2) {
                 String clickType = clickParts[0];
                 String clickValue = clickParts[1].replaceAll("^'|'$", "");
-                
-                switch (clickType) {
-                    case "open_url":
-                        currentSegment.clickEvent = ClickEvent.openUrl(clickValue);
-                        break;
-                    case "run_command":
-                        currentSegment.clickEvent = ClickEvent.runCommand(clickValue);
-                        break;
-                    case "suggest_command":
-                        currentSegment.clickEvent = ClickEvent.suggestCommand(clickValue);
-                        break;
-                    case "copy_to_clipboard":
-                        currentSegment.clickEvent = ClickEvent.copyToClipboard(clickValue);
-                        break;
-                }
+
+                currentSegment.clickEvent = switch (clickType) {
+                    case "open_url" -> ClickEvent.openUrl(clickValue);
+                    case "run_command" -> ClickEvent.runCommand(clickValue);
+                    case "suggest_command" -> ClickEvent.suggestCommand(clickValue);
+                    case "copy_to_clipboard" -> ClickEvent.copyToClipboard(clickValue);
+                    default -> currentSegment.clickEvent;
+                };
             }
         }
         return currentSegment;
     }
-    
+
     private TextSegment processSimpleTag(String tagType, TextSegment currentSegment) {
         if (miniText.getEnabledFormatters().contains(FormatterType.NAMED_COLORS)) {
             NamedTextColor namedColor = colorHelper.getNamedColor(tagType);
@@ -191,7 +184,7 @@ public class SegmentParser {
                 return currentSegment;
             }
         }
-        
+
         if (miniText.getEnabledFormatters().contains(FormatterType.DECORATIONS)) {
             TextDecoration decoration = colorHelper.getDecoration(tagType);
             if (decoration != null) {
@@ -199,7 +192,7 @@ public class SegmentParser {
                 return currentSegment;
             }
         }
-        
+
         return currentSegment;
     }
 }

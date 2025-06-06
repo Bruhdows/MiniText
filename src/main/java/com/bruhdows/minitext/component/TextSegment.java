@@ -19,32 +19,42 @@ public class TextSegment {
     int rainbowPhase = 0;
     boolean gradient = false;
     List<TextColor> gradientColors;
-    
+
     public TextSegment() {}
-    
+
     public TextSegment(TextSegment other) {
+        copyFrom(other);
+    }
+
+    public TextSegment copyFrom(TextSegment other) {
         this.text = other.text;
         this.color = other.color;
-        this.decorations = new EnumMap<>(other.decorations);
+        this.decorations.clear();
+        this.decorations.putAll(other.decorations);
         this.hoverEvent = other.hoverEvent;
         this.clickEvent = other.clickEvent;
         this.rainbow = other.rainbow;
         this.rainbowPhase = other.rainbowPhase;
         this.gradient = other.gradient;
         this.gradientColors = other.gradientColors;
+        return this;
     }
-    
+
+    public TextSegment reset() {
+        this.text = "";
+        this.color = null;
+        this.decorations.clear();
+        this.hoverEvent = null;
+        this.clickEvent = null;
+        this.rainbow = false;
+        this.rainbowPhase = 0;
+        this.gradient = false;
+        this.gradientColors = null;
+        return this;
+    }
+
     public void clearDecorations() {
         decorations.clear();
-        hoverEvent = null;
-        clickEvent = null;
-        rainbow = false;
-        gradient = false;
-        gradientColors = null;
-    }
-    
-    public void clearNonDecorations() {
-        color = null;
         hoverEvent = null;
         clickEvent = null;
         rainbow = false;
