@@ -24,10 +24,10 @@ public class TextSegment {
 
     public TextSegment(TextSegment other) {
         copyFrom(other);
+        this.text = other.text;
     }
 
     public TextSegment copyFrom(TextSegment other) {
-        this.text = other.text;
         this.color = other.color;
         this.decorations.clear();
         this.decorations.putAll(other.decorations);

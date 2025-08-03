@@ -18,7 +18,11 @@ public class FormattedText {
 
         TextProcessor processor = new TextProcessor(miniText, context);
         this.component = processor.process(input);
-        this.legacyString = LegacyComponentSerializer.legacySection().serialize(component);
+        this.legacyString = LegacyComponentSerializer.builder()
+                .character('§')
+                .hexColors()
+                .build()
+                .serialize(component);
     }
     
     public Component component() {

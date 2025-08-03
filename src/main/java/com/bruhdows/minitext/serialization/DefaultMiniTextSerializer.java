@@ -52,27 +52,38 @@ public class DefaultMiniTextSerializer implements MiniTextSerializer {
         
         return result.toString();
     }
-    
-    private void appendFormattingChanges(StringBuilder sb, 
-                                       ComponentAnalyzer.FormattedSegment last, 
-                                       ComponentAnalyzer.FormattedSegment current) {
-        
+
+    private void appendFormattingChanges(
+            StringBuilder sb,
+            ComponentAnalyzer.FormattedSegment last,
+            ComponentAnalyzer.FormattedSegment current
+    ) {
         if (needsReset(last, current)) {
             sb.append("[reset]");
             last = new ComponentAnalyzer.FormattedSegment();
         }
-        
-        if (!colorEquals(last.color, current.color)) {
+
+        boolean colorChanged = !colorEquals(last.color, current.color);
+        if (colorChanged) {
             sb.append(helper.serializeColor(current.color));
         }
-        
-        String decorations = getNewDecorations(last, current);
-        sb.append(decorations);
-        
+
+        for (TextDecoration deco : TextDecoration.values()) {
+            TextDecoration.State lastState =
+                    last.decorations.getOrDefault(deco, TextDecoration.State.NOT_SET);
+            TextDecoration.State currState =
+                    current.decorations.getOrDefault(deco, TextDecoration.State.NOT_SET);
+
+            if (currState == TextDecoration.State.TRUE
+                    && (colorChanged || lastState != currState)) {
+                sb.append(helper.serializeDecorations(Map.of(deco,
+                        TextDecoration.State.TRUE)));
+            }
+        }
+
         if (!hoverEquals(last.hoverEvent, current.hoverEvent)) {
             sb.append(helper.serializeHoverEvent(current.hoverEvent));
         }
-        
         if (!clickEquals(last.clickEvent, current.clickEvent)) {
             sb.append(helper.serializeClickEvent(current.clickEvent));
         }
