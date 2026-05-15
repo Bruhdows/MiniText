@@ -2,9 +2,16 @@
 lombok = "8.13.1"
 shadow = "9.0.0-beta15"
 adventure-text-serializer-legacy = "4.21.0"
+adventure-text-serializer-plain = "4.21.0"
+junit = "5.12.2"
+junit-platform = "1.12.2"
 
 [libraries]
 adventure-text-serializer-legacy = { module = "net.kyori:adventure-text-serializer-legacy", version.ref = "adventure-text-serializer-legacy" }
+adventure-text-serializer-plain = { module = "net.kyori:adventure-text-serializer-plain", version.ref = "adventure-text-serializer-plain" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
 
 [plugins]
 java = { id = "java" }

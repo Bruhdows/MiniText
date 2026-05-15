@@ -214,9 +214,6 @@ public class SegmentParser {
         segmentToModify.gradient = false;
         segmentToModify.gradientColors = null;
         segmentToModify.color = null;
-        segmentToModify.decorations.clear();
-        segmentToModify.hoverEvent = null;
-        segmentToModify.clickEvent = null;
         return segmentToModify;
     }
 
@@ -230,9 +227,6 @@ public class SegmentParser {
                     segmentToModify.gradientColors = gradientColors;
                     segmentToModify.rainbow = false;
                     segmentToModify.color = null;
-                    segmentToModify.decorations.clear();
-                    segmentToModify.hoverEvent = null;
-                    segmentToModify.clickEvent = null;
                 }
             }
         }

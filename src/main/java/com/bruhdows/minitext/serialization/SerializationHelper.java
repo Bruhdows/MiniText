@@ -6,6 +6,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,6 +15,7 @@ public class SerializationHelper {
 
     private static final Map<NamedTextColor, String> NAMED_COLOR_MAP = new HashMap<>();
     private static final Map<TextDecoration, String> DECORATION_MAP = new HashMap<>();
+    private static final PlainTextComponentSerializer PLAIN_TEXT = PlainTextComponentSerializer.plainText();
 
     private final boolean useShortHex;
     private final boolean preferNamedColors;
@@ -115,7 +117,7 @@ public class SerializationHelper {
         if (hoverEvent.action() == HoverEvent.Action.SHOW_TEXT) {
             Object value = hoverEvent.value();
             if (value instanceof Component) {
-                String text = value.toString().replaceAll("'", "'");
+                String text = escapeQuotedValue(PLAIN_TEXT.serialize((Component) value));
                 return "[hover:show_text:'" + text + "']";
             }
         }
@@ -144,7 +146,11 @@ public class SerializationHelper {
                 return "";
         }
 
-        String value = clickEvent.value().replaceAll("'", "'");
+        String value = escapeQuotedValue(clickEvent.value());
         return "[click:" + action + ":'" + value + "']";
+    }
+
+    private String escapeQuotedValue(String value) {
+        return value.replace("\\", "\\\\").replace("'", "\\'");
     }
 }

@@ -51,7 +51,7 @@ public class ComponentBuilder {
                 Style style = baseStyle.color(color);
                 builder.append(Component.text(c).style(style));
             } else {
-                builder.append(Component.text(c));
+                builder.append(Component.text(c).style(baseStyle));
             }
         }
 
@@ -73,7 +73,7 @@ public class ComponentBuilder {
                 Style style = baseStyle.color(color);
                 builder.append(Component.text(c).style(style));
             } else {
-                builder.append(Component.text(c));
+                builder.append(Component.text(c).style(baseStyle));
             }
         }
 

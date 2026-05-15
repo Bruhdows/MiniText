@@ -25,10 +25,16 @@ public class ComponentAnalyzer {
         FormattedSegment currentSegment = new FormattedSegment(parentSegment);
         
         Style style = component.style();
-        currentSegment.color = style.color();
+        if (style.color() != null) {
+            currentSegment.color = style.color();
+        }
         currentSegment.decorations.putAll(style.decorations());
-        currentSegment.hoverEvent = style.hoverEvent();
-        currentSegment.clickEvent = style.clickEvent();
+        if (style.hoverEvent() != null) {
+            currentSegment.hoverEvent = style.hoverEvent();
+        }
+        if (style.clickEvent() != null) {
+            currentSegment.clickEvent = style.clickEvent();
+        }
         
         if (component instanceof TextComponent textComp) {
             String content = textComp.content();
